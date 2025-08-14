@@ -17,4 +17,16 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/auth/signin",
   },
+  callbacks: {
+    session({ session, user }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id, // Prisma User id'si
+        },
+      };
+    },
+  },
 };
+

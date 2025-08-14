@@ -113,20 +113,41 @@ export default function Home() {
       </form>
 
       <ul className="space-y-3">
-        {tasks.map((task) => (
-          <li
-            key={task.id}
-            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
-          >
-            <span
-              onClick={() => toggleTask(task.id, task.completed)}
-              className={`flex-1 ${task.completed ? "line-through text-gray-400" : "text-gray-800"}`}
-            >
-              {task.title}
-            </span>
-          </li>
-        ))}
-      </ul>
+  {tasks.map((task) => (
+    <li
+      key={task.id}
+      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition"
+    >
+      <span
+        onClick={() => toggleTask(task.id, task.completed)}
+        className={`flex-1 cursor-pointer ${task.completed ? "line-through text-gray-400" : "text-gray-800"}`}
+      >
+        {task.title}
+      </span>
+
+      <button
+        onClick={async () => {
+          if (!confirm("Bu görevi silmek istediğinizden emin misiniz?")) return;
+
+          try {
+            const res = await fetch(`/api/tasks/${task.id}`, {
+              method: "DELETE",
+            });
+            if (!res.ok) throw new Error("Silme başarısız");
+
+            setTasks(prev => prev.filter(t => t.id !== task.id));
+          } catch (error) {
+            console.error(error);
+          }
+        }}
+        className="ml-3 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition"
+      >
+        Sil
+      </button>
+    </li>
+  ))}
+</ul>
+
     </main>
   );
 }
