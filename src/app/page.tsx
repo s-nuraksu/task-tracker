@@ -17,7 +17,14 @@ export default function Home() {
 
   async function fetchTasks() {
     if (!session) return;
+
     const res = await fetch("/api/tasks");
+    if (!res.ok) {
+      console.error("API Hatası:", res.status);
+      setTasks([]);
+      return;
+    }
+
     const data = await res.json();
     setTasks(data);
   }
@@ -25,22 +32,36 @@ export default function Home() {
   async function addTask(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !session) return;
-    await fetch("/api/tasks", {
+
+    const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title }),
     });
+
+    if (!res.ok) {
+      console.error("Görev eklenemedi:", res.status);
+      return;
+    }
+
     setTitle("");
     fetchTasks();
   }
 
   async function toggleTask(id: number, completed: boolean) {
     if (!session) return;
-    await fetch("/api/tasks", {
+
+    const res = await fetch("/api/tasks", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, completed: !completed }),
     });
+
+    if (!res.ok) {
+      console.error("Görev güncellenemedi:", res.status);
+      return;
+    }
+
     fetchTasks();
   }
 
