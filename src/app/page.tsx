@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
+import Link from "next/link";
 
 type Task = {
   id: number;
@@ -18,65 +19,26 @@ export default function Home() {
   const { data: session } = useSession();
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  // Form state'leri
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [priority, setPriority] = useState("medium");
-
   async function fetchTasks() {
     if (!session) return;
-
     const res = await fetch("/api/tasks");
-    if (!res.ok) {
-      console.error("API Hatası:", res.status);
-      setTasks([]);
-      return;
+    if (res.ok) {
+      setTasks(await res.json());
     }
-
-    const data = await res.json();
-    setTasks(data);
-  }
-
-  async function addTask(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim() || !session) return;
-
-    const res = await fetch("/api/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, dueDate, priority }),
-    });
-
-    if (!res.ok) {
-      console.error("Görev eklenemedi:", res.status);
-      return;
-    }
-
-    // Formu sıfırla
-    setTitle("");
-    setDescription("");
-    setDueDate("");
-    setPriority("medium");
-
-    fetchTasks();
   }
 
   async function toggleTask(id: number, completed: boolean) {
-    if (!session) return;
-
-    const res = await fetch("/api/tasks", {
+    await fetch("/api/tasks", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, completed: !completed }),
     });
-
-    if (!res.ok) {
-      console.error("Görev güncellenemedi:", res.status);
-      return;
-    }
-
     fetchTasks();
+  }
+
+  async function deleteTask(id: number) {
+    await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+    setTasks((prev) => prev.filter((t) => t.id !== id));
   }
 
   useEffect(() => {
@@ -85,12 +47,11 @@ export default function Home() {
 
   if (!session) {
     return (
-      <main className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg text-center">
-        <h1 className="text-2xl font-bold mb-4">Görev Takip Uygulaması</h1>
-        <p className="mb-6">Görevlerinizi görmek ve eklemek için giriş yapın:</p>
+      <main className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl text-center">
+        <h1 className="text-2xl font-bold mb-4 text-gray-600">Görev Takip Uygulaması</h1>
         <button
           onClick={() => signIn("github")}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-3 rounded-lg transition"
+          className="bg-blue-500 text-white px-5 py-3 rounded-lg"
         >
           GitHub ile Giriş Yap
         </button>
@@ -99,70 +60,38 @@ export default function Home() {
   }
 
   return (
-    <main className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg">
+    <main className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-blue-400">Görev Listesi</h1>
+        <h1 className="text-3xl font-bold text-blue-400">Görevlerim</h1>
         <button
           onClick={() => signOut()}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
+          className="bg-red-500 text-white px-4 py-2 rounded-lg"
         >
-          Çıkış Yap
+          Çıkış
         </button>
       </div>
 
-      {/* Görev ekleme formu */}
-      <form onSubmit={addTask} className="space-y-4 mb-6">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Görev başlığı..."
-          className="w-full border border-gray-400 p-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400"
-        />
+      {/* Yeni görev sayfasına link */}
+      <Link
+        href="/tasks/new"
+        className="mb-6 inline-flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg"
+      >
+        <Plus className="w-5 h-5 mr-2" /> Görev Oluştur
+      </Link>
 
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Görev açıklaması..."
-          className="w-full border border-gray-400 p-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400"
-        />
-
-        <input
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          className="w-full border border-gray-400 p-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-
-        <select
-          value={priority}
-          onChange={(e) => setPriority(e.target.value)}
-          className="w-full border border-gray-400 p-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          <option value="low">Düşük</option>
-          <option value="medium">Orta</option>
-          <option value="high">Yüksek</option>
-        </select>
-
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-3 rounded-lg transition w-full"
-        >
-          Ekle
-        </button>
-      </form>
-
-      {/* Görev listesi */}
-      <ul className="space-y-3">
+      <ul className="space-y-3 mt-4">
+        {tasks.length === 0 && (
+          <p className="text-gray-500">Henüz görev yok.</p>
+        )}
         {tasks.map((task) => (
           <li
             key={task.id}
-            className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition"
+            className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg shadow-sm"
           >
             <div className="flex justify-between items-center">
               <span
                 onClick={() => toggleTask(task.id, task.completed)}
-                className={`flex-1 cursor-pointer ${
+                className={`cursor-pointer ${
                   task.completed
                     ? "line-through text-gray-400"
                     : "text-gray-800"
@@ -170,26 +99,13 @@ export default function Home() {
               >
                 {task.title}
               </span>
-
               <button
-                onClick={async () => {
-                  if (!confirm("Bu görevi silmek istediğinizden emin misiniz?"))
-                    return;
-
-                  const res = await fetch(`/api/tasks/${task.id}`, {
-                    method: "DELETE",
-                  });
-                  if (!res.ok) throw new Error("Silme başarısız");
-
-                  setTasks((prev) => prev.filter((t) => t.id !== task.id));
-                }}
-                className="ml-3 bg-red-400 hover:bg-red-500 text-white p-2 rounded-lg transition flex items-center justify-center"
+                onClick={() => deleteTask(task.id)}
+                className="bg-red-400 text-white p-2 rounded-lg"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Yeni alanların gösterimi */}
             {task.description && (
               <p className="text-sm text-gray-600">{task.description}</p>
             )}
