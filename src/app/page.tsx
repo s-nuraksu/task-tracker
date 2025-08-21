@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { Trash2 } from "lucide-react";
 
 type Task = {
   id: number;
   title: string;
+  description?: string;
+  dueDate?: string;
+  priority: string;
   completed: boolean;
   createdAt: string;
 };
@@ -13,7 +17,12 @@ type Task = {
 export default function Home() {
   const { data: session } = useSession();
   const [tasks, setTasks] = useState<Task[]>([]);
+
+  // Form state'leri
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [priority, setPriority] = useState("medium");
 
   async function fetchTasks() {
     if (!session) return;
@@ -36,7 +45,7 @@ export default function Home() {
     const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title }),
+      body: JSON.stringify({ title, description, dueDate, priority }),
     });
 
     if (!res.ok) {
@@ -44,7 +53,12 @@ export default function Home() {
       return;
     }
 
+    // Formu sıfırla
     setTitle("");
+    setDescription("");
+    setDueDate("");
+    setPriority("medium");
+
     fetchTasks();
   }
 
@@ -96,58 +110,108 @@ export default function Home() {
         </button>
       </div>
 
-      <form onSubmit={addTask} className="flex gap-3 mb-6">
+      {/* Görev ekleme formu */}
+      <form onSubmit={addTask} className="space-y-4 mb-6">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Yeni görev ekle..."
-          className="border border-gray-400 p-3 flex-1 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400"
+          placeholder="Görev başlığı..."
+          className="w-full border border-gray-400 p-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400"
         />
+
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Görev açıklaması..."
+          className="w-full border border-gray-400 p-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400"
+        />
+
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="w-full border border-gray-400 p-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+
+        <select
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+          className="w-full border border-gray-400 p-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          <option value="low">Düşük</option>
+          <option value="medium">Orta</option>
+          <option value="high">Yüksek</option>
+        </select>
+
         <button
           type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-3 rounded-lg transition"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-3 rounded-lg transition w-full"
         >
           Ekle
         </button>
       </form>
 
+      {/* Görev listesi */}
       <ul className="space-y-3">
-  {tasks.map((task) => (
-    <li
-      key={task.id}
-      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition"
-    >
-      <span
-        onClick={() => toggleTask(task.id, task.completed)}
-        className={`flex-1 cursor-pointer ${task.completed ? "line-through text-gray-400" : "text-gray-800"}`}
-      >
-        {task.title}
-      </span>
+        {tasks.map((task) => (
+          <li
+            key={task.id}
+            className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition"
+          >
+            <div className="flex justify-between items-center">
+              <span
+                onClick={() => toggleTask(task.id, task.completed)}
+                className={`flex-1 cursor-pointer ${
+                  task.completed
+                    ? "line-through text-gray-400"
+                    : "text-gray-800"
+                }`}
+              >
+                {task.title}
+              </span>
 
-      <button
-        onClick={async () => {
-          if (!confirm("Bu görevi silmek istediğinizden emin misiniz?")) return;
+              <button
+                onClick={async () => {
+                  if (!confirm("Bu görevi silmek istediğinizden emin misiniz?"))
+                    return;
 
-          try {
-            const res = await fetch(`/api/tasks/${task.id}`, {
-              method: "DELETE",
-            });
-            if (!res.ok) throw new Error("Silme başarısız");
+                  const res = await fetch(`/api/tasks/${task.id}`, {
+                    method: "DELETE",
+                  });
+                  if (!res.ok) throw new Error("Silme başarısız");
 
-            setTasks(prev => prev.filter(t => t.id !== task.id));
-          } catch (error) {
-            console.error(error);
-          }
-        }}
-        className="ml-3 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition"
-      >
-        Sil
-      </button>
-    </li>
-  ))}
-</ul>
+                  setTasks((prev) => prev.filter((t) => t.id !== task.id));
+                }}
+                className="ml-3 bg-red-400 hover:bg-red-500 text-white p-2 rounded-lg transition flex items-center justify-center"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
 
+            {/* Yeni alanların gösterimi */}
+            {task.description && (
+              <p className="text-sm text-gray-600">{task.description}</p>
+            )}
+            {task.dueDate && (
+              <p className="text-xs text-gray-500">
+                Son tarih: {new Date(task.dueDate).toLocaleDateString()}
+              </p>
+            )}
+            <p
+              className={`text-xs font-semibold ${
+                task.priority === "high"
+                  ? "text-red-500"
+                  : task.priority === "medium"
+                  ? "text-yellow-500"
+                  : "text-green-500"
+              }`}
+            >
+              Öncelik: {task.priority}
+            </p>
+          </li>
+        ))}
+      </ul>
     </main>
   );
 }
