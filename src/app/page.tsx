@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Trash2, Plus } from "lucide-react";
 import Link from "next/link";
 
-// Task tipini tanımlıyoruz
 type Task = {
   id: number;
   title: string;
@@ -17,42 +15,27 @@ type Task = {
 };
 
 export default function Home() {
-  const { data: session } = useSession(); // Kullanıcının giriş yapıp yapmadığını kontrol eder
-  const [tasks, setTasks] = useState<Task[]>([]); // Görevler listesi state
-  const [sortBy, setSortBy] = useState("createdAt"); // Sıralama kriteri state
+  const { data: session, status } = useSession();
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-  // API'den görevleri çeker
-  async function fetchTasks(sort: string = "createdAt") {
+  async function fetchTasks() {
     if (!session) return;
-    const res = await fetch(`/api/tasks?sort=${sort}`);
-    if (res.ok) {
-      setTasks(await res.json());
-    }
+    const res = await fetch("/api/tasks");
+    if (res.ok) setTasks(await res.json());
   }
 
-  // Görev tamamlandı/tamamlanmadı durumunu değiştirir
-  async function toggleTask(id: number, completed: boolean) {
-    await fetch("/api/tasks", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, completed: !completed }),
-    });
-    fetchTasks(sortBy); // Güncel sıralamaya göre tekrar görevleri çek
-  }
-
-  // Görev silme fonksiyonu
-  async function deleteTask(id: number) {
-    await fetch(`/api/tasks/${id}`, { method: "DELETE" });
-    // Silinen görevi ekranda listeden çıkarıyoruz
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-  }
-
-  // Sayfa ilk açıldığında ve sıralama değiştiğinde görevleri yükle
   useEffect(() => {
-    fetchTasks(sortBy);
-  }, [session, sortBy]);
+    fetchTasks();
+  }, [session]);
 
-  // Eğer kullanıcı giriş yapmamışsa giriş ekranını göster
+  if (status === "loading") {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p>Yükleniyor...</p>
+      </main>
+    );
+  }
+
   if (!session) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -60,7 +43,6 @@ export default function Home() {
           <h1 className="text-2xl font-bold mb-4 text-gray-600">
             Görev Takip Uygulaması
           </h1>
-          {/* GitHub ile giriş yapma butonu */}
           <button
             onClick={() => signIn("github")}
             className="bg-blue-500 hover:bg-blue-400 text-white px-5 py-3 rounded-lg transition"
@@ -72,12 +54,10 @@ export default function Home() {
     );
   }
 
-  // Eğer kullanıcı giriş yaptıysa görevler sayfasını göster
   return (
-    <main className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg">
+    <main className="max-w-5xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-blue-400">Görevlerim</h1>
-        {/* Çıkış butonu */}
         <button
           onClick={() => signOut()}
           className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
@@ -86,90 +66,72 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Yeni görev ekleme butonu ve sıralama menüsü */}
-      <div className="flex justify-between items-center mb-4">
-        {/* Yeni görev sayfasına yönlendiren buton */}
-        <Link
-          href="/tasks/new"
-          className="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition"
-        >
-          <Plus className="w-5 h-5 mr-2" /> Görev Oluştur
-        </Link>
+      {/* Yeni görev sayfasına gitmek için buton */}
+      <Link
+        href="/tasks/new"
+        className="inline-block mb-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+      >
+        Görev Oluştur
+      </Link>
 
-        {/* Görev sıralama dropdown */}
-        <div className="flex items-center gap-2">
-          <label className="text-gray-600 font-medium">Sırala:</label>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="border rounded-lg p-2 text-black"
+      {/* Tablo */}
+      <div className="overflow-x-auto">
+  <table className="min-w-full border border-gray-200 text-sm text-black">
+    <thead className="bg-gray-100 text-black">
+      <tr>
+        <th className="px-4 py-2 border">ID</th>
+        <th className="px-4 py-2 border">Başlık</th>
+        <th className="px-4 py-2 border">Açıklama</th>
+        <th className="px-4 py-2 border">Son Tarih</th>
+        <th className="px-4 py-2 border">Öncelik</th>
+        <th className="px-4 py-2 border">Durum</th>
+        <th className="px-4 py-2 border">Oluşturulma</th>
+      </tr>
+    </thead>
+    <tbody className="text-black">
+      {tasks.length === 0 && (
+        <tr>
+          <td
+            colSpan={7}
+            className="text-center text-gray-500 py-4 border"
           >
-            <option value="createdAt">Oluşturulma Tarihi</option>
-            <option value="priority">Öncelik</option>
-            <option value="dueDate">Son Tarih</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Görev listesi */}
-      <ul className="space-y-3 mt-4">
-        {tasks.length === 0 && (
-          <p className="text-gray-500">Henüz görev yok.</p>
-        )}
-        {tasks.map((task) => (
-          <li
-            key={task.id}
-            className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition"
+            Henüz görev yok.
+          </td>
+        </tr>
+      )}
+      {tasks.map((task) => (
+        <tr key={task.id} className="hover:bg-gray-50">
+          <td className="px-4 py-2 border">{task.id}</td>
+          <td className="px-4 py-2 border">{task.title}</td>
+          <td className="px-4 py-2 border">{task.description || "-"}</td>
+          <td className="px-4 py-2 border">
+            {task.dueDate
+              ? new Date(task.dueDate).toLocaleDateString()
+              : "-"}
+          </td>
+          <td
+            className={`px-4 py-2 border border-black font-semibold ${
+              task.priority === "high"
+                ? "text-red-500"
+                : task.priority === "medium"
+                ? "text-yellow-500"
+                : "text-green-500"
+            }`}
           >
-            <div className="flex justify-between items-center">
-              {/* Görev başlığı - tamamlandıysa üstü çizili */}
-              <span
-                onClick={() => toggleTask(task.id, task.completed)}
-                className={`cursor-pointer ${
-                  task.completed
-                    ? "line-through text-gray-400"
-                    : "text-gray-800"
-                }`}
-              >
-                {task.title}
-              </span>
+            {task.priority}
+          </td>
+          <td className="px-4 py-2 border">
+            {task.completed ? "Tamamlandı" : "Beklemede"}
+          </td>
+          <td className="px-4 py-2 border">
+            {new Date(task.createdAt).toLocaleString()}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
-              {/* Silme butonu */}
-              <button
-                onClick={() => deleteTask(task.id)}
-                className="bg-red-400 hover:bg-red-500 text-white p-2 rounded-lg transition"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Görev açıklaması */}
-            {task.description && (
-              <p className="text-sm text-gray-600">{task.description}</p>
-            )}
-
-            {/* Görev son tarihi */}
-            {task.dueDate && (
-              <p className="text-xs text-gray-500">
-                Son tarih: {new Date(task.dueDate).toLocaleDateString()}
-              </p>
-            )}
-
-            {/* Görev önceliği */}
-            <p
-              className={`text-xs font-semibold ${
-                task.priority === "high"
-                  ? "text-red-500"
-                  : task.priority === "medium"
-                  ? "text-yellow-500"
-                  : "text-green-500"
-              }`}
-            >
-              Öncelik: {task.priority}
-            </p>
-          </li>
-        ))}
-      </ul>
     </main>
   );
 }
