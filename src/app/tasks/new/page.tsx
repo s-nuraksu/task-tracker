@@ -24,7 +24,7 @@ export default function NewTaskPage() {
 
   return (
     <main className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl">
-      <h1 className="text-2xl font-bold mb-6 text-black">Yeni Görev Oluştur</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Yeni Görev Oluştur</h1>
 
       <form onSubmit={addTask} className="space-y-4">
         <input

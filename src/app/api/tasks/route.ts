@@ -4,18 +4,19 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 // 🔹 GET → Kullanıcının tüm görevlerini getir
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
-
-  if (!session || !session.user?.email) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const { searchParams } = new URL(req.url);
+  const sort = searchParams.get("sort") || "createdAt"; // default createdAt
 
   // Kullanıcıyı bul
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
   });
-
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
@@ -23,11 +24,17 @@ export async function GET() {
   // Kullanıcıya ait görevleri getir
   const tasks = await prisma.task.findMany({
     where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
+    orderBy:
+      sort === "priority"
+        ? { priority: "desc" }
+        : sort === "dueDate"
+        ? { dueDate: "asc" }
+        : { createdAt: "desc" },
   });
 
   return NextResponse.json(tasks);
 }
+
 
 // 🔹 POST → Yeni görev oluştur
 export async function POST(req: Request) {
