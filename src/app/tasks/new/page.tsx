@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 export default function NewTaskPage() {
   const router = useRouter();
@@ -18,13 +19,7 @@ export default function NewTaskPage() {
     const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        department,
-        title,
-        description,
-        customer,
-        priority,
-      }),
+      body: JSON.stringify({ department, title, description, customer, priority }),
     });
 
     if (res.ok) {
@@ -33,29 +28,39 @@ export default function NewTaskPage() {
   }
 
   return (
-    <main className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-lg shadow-lg text-black">
-      <h1 className="text-2xl font-bold mb-6 text-black">Görev Ekle</h1>
-      <form onSubmit={handleSubmit} className="space-y-4 text-black">
+    <main className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-lg shadow-lg relative">
+      {/* 🔙 Geri Dön Butonu */}
+      <button
+        onClick={() => router.push("/")}
+        className="absolute top-4 left-4 flex items-center text-gray-600 hover:text-blue-600"
+      >
+        <ArrowLeft className="w-5 h-5 mr-1" />
+        Geri
+      </button>
+
+      <h1 className="text-2xl font-bold mb-6 text-blue-500 text-center">
+        Görev Ekle
+      </h1>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Departman */}
         <div>
           <label className="block mb-1 font-medium text-black">Departman</label>
           <input
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="w-full border border-black p-2 rounded text-black"
+            className="w-full border p-2 rounded text-black"
             placeholder="Departman adı girin"
           />
         </div>
 
         {/* Görev Konusu */}
         <div>
-          <label className="block mb-1 font-medium text-black">
-            Görev Konusu
-          </label>
+          <label className="block mb-1 font-medium text-black">Görev Konusu</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border border-black p-2 rounded text-black"
+            className="w-full border p-2 rounded text-black"
             placeholder="Görev başlığı"
             required
           />
@@ -63,13 +68,11 @@ export default function NewTaskPage() {
 
         {/* Görev Açıklaması */}
         <div>
-          <label className="block mb-1 font-medium text-black">
-            Görev Açıklaması
-          </label>
+          <label className="block mb-1 font-medium text-black">Görev Açıklaması</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full border border-black p-2 rounded h-24 text-black"
+            className="w-full border p-2 rounded h-24 text-black"
             placeholder="Detaylı açıklama girin..."
           />
         </div>
@@ -80,7 +83,7 @@ export default function NewTaskPage() {
           <input
             value={customer}
             onChange={(e) => setCustomer(e.target.value)}
-            className="w-full border border-black p-2 rounded text-black"
+            className="w-full border p-2 rounded text-black"
             placeholder="Müşteri adı"
           />
         </div>
@@ -94,10 +97,10 @@ export default function NewTaskPage() {
                 type="button"
                 key={level}
                 onClick={() => setPriority(level)}
-                className={`px-3 py-1 rounded border  ${
+                className={`px-3 py-1 rounded border ${
                   priority === level
-                    ? "bg-blue-500 text-white border-blue-700"
-                    : "bg-gray-100 text-black "
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-black"
                 }`}
               >
                 {level === "low" && "Düşük"}
@@ -112,7 +115,7 @@ export default function NewTaskPage() {
         {/* Kaydet Butonu */}
         <button
           type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg border border-blue-700"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg w-full"
         >
           Kaydet
         </button>
