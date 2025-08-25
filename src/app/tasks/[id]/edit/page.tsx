@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Priority } from "@prisma/client";
 import { notFound, redirect } from "next/navigation";
 
 type EditPageProps = {
@@ -31,7 +32,7 @@ export default async function EditTaskPage({ params }: EditPageProps) {
         title,
         description,
         dueDate: dueDate ? new Date(dueDate) : null,
-        priority,
+        priority: priority as Priority,
         completed,
       },
     });
