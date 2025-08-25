@@ -6,7 +6,8 @@ import { authOptions } from "@/lib/auth";
 // 🔹 GET → Kullanıcının tüm görevlerini getir
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
 
   // Kullanıcıyı bul
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { id: session.user.id },
   });
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -35,16 +36,17 @@ export async function GET(req: Request) {
   return NextResponse.json(tasks);
 }
 
-
 // 🔹 POST → Yeni görev oluştur
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
+  console.log("Session from API:", session);
 
-  if (!session || !session.user?.email) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { title, description, dueDate, priority } = await req.json();
+  const { title, description, dueDate, priority, department, customer } =
+    await req.json();
 
   if (!title || title.trim() === "") {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -52,7 +54,7 @@ export async function POST(req: Request) {
 
   // Kullanıcıyı bul
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { id: session.user.id },
   });
 
   if (!user) {
@@ -66,6 +68,8 @@ export async function POST(req: Request) {
       description: description || null,
       dueDate: dueDate ? new Date(dueDate) : null,
       priority: priority || "medium",
+      department: department || null,
+      customer: customer || null,
       userId: user.id,
     },
   });
@@ -73,18 +77,27 @@ export async function POST(req: Request) {
   return NextResponse.json(task);
 }
 
-// 🔹 PUT → Görev güncelle (tamamlandı durumu veya diğer alanlar)
+// 🔹 PUT → Görev güncelle
 export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id, completed, title, description, dueDate, priority } = await req.json();
+  const {
+    id,
+    completed,
+    title,
+    description,
+    dueDate,
+    priority,
+    department,
+    customer,
+  } = await req.json();
 
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { id: session.user.id },
   });
 
   if (!user) {
@@ -96,17 +109,18 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-const updatedTask = await prisma.task.update({
-  where: { id },
-  data: {
-    completed: completed ?? task.completed,
-    title: title ?? task.title,
-    description: description ?? task.description,
-    dueDate: dueDate ? new Date(dueDate) : task.dueDate,
-    priority: priority ?? task.priority,
-  },
-});
-
+  const updatedTask = await prisma.task.update({
+    where: { id },
+    data: {
+      completed: completed ?? task.completed,
+      title: title ?? task.title,
+      description: description ?? task.description,
+      dueDate: dueDate ? new Date(dueDate) : task.dueDate,
+      priority: priority ?? task.priority,
+      department: department ?? task.department,
+      customer: customer ?? task.customer,
+    },
+  });
 
   return NextResponse.json(updatedTask);
 }
@@ -115,14 +129,14 @@ const updatedTask = await prisma.task.update({
 export async function DELETE(req: Request) {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await req.json();
 
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { id: session.user.id },
   });
 
   if (!user) {

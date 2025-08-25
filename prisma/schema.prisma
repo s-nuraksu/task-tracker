@@ -45,13 +45,22 @@ model Session {
 }
 
 model Task {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
-  description String?       // Görev açıklaması (opsiyonel)
-  completed   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  dueDate     DateTime?     // Son teslim tarihi (opsiyonel)
-  priority    String   @default("medium") // low | medium | high
+  description String?          // Görev açıklaması
+  completed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  dueDate     DateTime?        // Son teslim tarihi
+  priority    Priority  @default(medium) // Enum kullanalım
+  department  String?          // Yeni: Departman
+  customer    String?          // Yeni: Müşteri
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+enum Priority {
+  low
+  medium
+  high
+  urgent
 }

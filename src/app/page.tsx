@@ -76,62 +76,45 @@ export default function Home() {
 
       {/* Tablo */}
       <div className="overflow-x-auto">
-  <table className="min-w-full border border-gray-200 text-sm text-black">
-    <thead className="bg-gray-100 text-black">
-      <tr>
-        <th className="px-4 py-2 border">ID</th>
-        <th className="px-4 py-2 border">Başlık</th>
-        <th className="px-4 py-2 border">Açıklama</th>
-        <th className="px-4 py-2 border">Son Tarih</th>
-        <th className="px-4 py-2 border">Öncelik</th>
-        <th className="px-4 py-2 border">Durum</th>
-        <th className="px-4 py-2 border">Oluşturulma</th>
-      </tr>
-    </thead>
-    <tbody className="text-black">
-      {tasks.length === 0 && (
-        <tr>
-          <td
-            colSpan={7}
-            className="text-center text-gray-500 py-4 border"
-          >
-            Henüz görev yok.
-          </td>
-        </tr>
-      )}
-      {tasks.map((task) => (
-        <tr key={task.id} className="hover:bg-gray-50">
-          <td className="px-4 py-2 border">{task.id}</td>
-          <td className="px-4 py-2 border">{task.title}</td>
-          <td className="px-4 py-2 border">{task.description || "-"}</td>
-          <td className="px-4 py-2 border">
-            {task.dueDate
-              ? new Date(task.dueDate).toLocaleDateString()
-              : "-"}
-          </td>
-          <td
-            className={`px-4 py-2 border border-black font-semibold ${
-              task.priority === "high"
-                ? "text-red-500"
-                : task.priority === "medium"
-                ? "text-yellow-500"
-                : "text-green-500"
-            }`}
-          >
-            {task.priority}
-          </td>
-          <td className="px-4 py-2 border">
-            {task.completed ? "Tamamlandı" : "Beklemede"}
-          </td>
-          <td className="px-4 py-2 border">
-            {new Date(task.createdAt).toLocaleString()}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-
+        <table className="table-fixed w-full border border-gray-200 text-sm text-black">
+          <thead className="bg-gray-100 text-black">
+            <tr>
+              <th className="w-16 px-2 py-2 border">ID</th>
+              <th className="w-40 px-2 py-2 border">Başlık</th>
+              <th className="w-60 px-2 py-2 border">Açıklama</th>
+              <th className="w-32 px-2 py-2 border">Son Tarih</th>
+              <th className="w-24 px-2 py-2 border">Öncelik</th>
+              <th className="w-24 px-2 py-2 border">Durum</th>
+              <th className="w-32 px-2 py-2 border">Oluşturulma</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tasks.map((task) => (
+              <tr
+                key={task.id}
+                className="hover:bg-gray-100 cursor-pointer"
+                onClick={() => (window.location.href = `/tasks/${task.id}`)}
+              >
+                <td className="px-2 py-2 border">{task.id}</td>
+                <td className="px-2 py-2 border truncate">{task.title}</td>
+                <td className="px-2 py-2 border truncate">{task.description}</td>
+                <td className="px-2 py-2 border">
+                  {task.dueDate
+                    ? new Date(task.dueDate).toLocaleDateString()
+                    : "-"}
+                </td>
+                <td className="px-2 py-2 border">{task.priority}</td>
+                <td className="px-2 py-2 border">
+                  {task.completed ? "Tamamlandı" : "Bekliyor"}
+                </td>
+                <td className="px-2 py-2 border">
+                  {new Date(task.createdAt).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </main>
   );
 }

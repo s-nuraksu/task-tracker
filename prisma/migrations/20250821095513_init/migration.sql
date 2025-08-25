@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "public"."Priority" AS ENUM ('low', 'medium', 'high', 'urgent');
+
 -- CreateTable
 CREATE TABLE "public"."User" (
     "id" TEXT NOT NULL,
@@ -45,7 +48,9 @@ CREATE TABLE "public"."Task" (
     "completed" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "dueDate" TIMESTAMP(3),
-    "priority" TEXT NOT NULL DEFAULT 'medium',
+    "priority" "public"."Priority" NOT NULL DEFAULT 'medium',
+    "department" TEXT,
+    "customer" TEXT,
     "userId" TEXT NOT NULL,
 
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
