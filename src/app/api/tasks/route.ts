@@ -39,7 +39,6 @@ export async function GET(req: Request) {
 // 🔹 POST → Yeni görev oluştur
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  console.log("Session from API:", session);
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
