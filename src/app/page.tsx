@@ -29,6 +29,9 @@ export default function Dashboard() {
     fetchTasks();
   }, [session]);
 
+  const inProgressCount = tasks.filter((t) => !t.completed).length; // İşlemde olan görevler
+  const completedCount = tasks.filter((t) => t.completed).length; // Çözülen görevler
+
   if (status === "loading") {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -67,14 +70,14 @@ export default function Dashboard() {
           <div className="flex justify-between items-center border rounded px-3 py-2 bg-white">
             <span className="text-black">İşlemde</span>
             <span className="bg-blue-500 text-white px-2 py-1 rounded text-sm">
-              3
+              {inProgressCount} {/* Dinamik sayı */}
             </span>
           </div>
           {/* Çözüldü */}
           <div className="flex justify-between items-center border rounded px-3 py-2 bg-white">
             <span className="text-black">Çözüldü</span>
             <span className="bg-green-600 text-white px-2 py-1 rounded text-sm">
-              7644
+              {completedCount} {/* Dinamik sayı */}
             </span>
           </div>
           {/* İptal */}

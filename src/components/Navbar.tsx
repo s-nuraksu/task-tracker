@@ -9,7 +9,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className="w-full bg-blue-900 text-white px-6 py-3 flex items-center justify-between shadow-md relative">
+    <nav className="w-full min-w-[1024px] bg-blue-900 text-white px-6 py-3 flex items-center justify-between shadow-md relative">
       {/* Sol taraf (Logo + Menü) */}
       <div className="flex items-center gap-8">
         {/* Logo */}
@@ -18,7 +18,7 @@ export default function Navbar() {
         </Link>
 
         {/* Menü */}
-        <div className="flex gap-6 text-sm font-medium">
+        <div className="flex gap-6 text-sm font-medium ">
           <Link href="/requests" className="hover:underline">
             Talepler
           </Link>

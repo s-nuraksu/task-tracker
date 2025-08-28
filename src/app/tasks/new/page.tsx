@@ -35,7 +35,6 @@ export default function NewTaskPage() {
         className="absolute top-4 left-4 flex items-center text-gray-600 hover:text-blue-600"
       >
         <ArrowLeft className="w-5 h-5 mr-1" />
-        Geri
       </button>
 
       <h1 className="text-2xl font-bold mb-6 text-blue-500 text-center">

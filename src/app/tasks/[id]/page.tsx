@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { deleteTask } from "./actions";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 type TaskPageProps = {
   params: Promise<{ id: string }>;
@@ -19,7 +20,18 @@ export default async function TaskDetailPage({ params }: TaskPageProps) {
 
   return (
     <main className="max-w-xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg text-black">
-      <h1 className="text-2xl font-bold mb-6">Görev Detayı</h1>
+       <div className="flex items-center gap-1 mb-6">
+    <Link
+      href="/"
+      className="flex items-center text-gray-600 hover:text-blue-600"
+    >
+      <ArrowLeft className="w-5 h-5 mr-1" />
+    </Link>
+
+    <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold">
+    Görev Detayı
+  </h1>
+  </div>
 
       <div className="space-y-3">
         <p><span className="font-semibold">Başlık:</span> {task.title}</p>
