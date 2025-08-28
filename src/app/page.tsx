@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { Search } from "lucide-react";
 
 type Task = {
   id: number;
@@ -17,6 +18,8 @@ type Task = {
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "inProgress" | "completed">("all"); // ✅ Durum filtresi
 
   // Görevleri API’den çek
   async function fetchTasks() {
@@ -31,6 +34,20 @@ export default function Dashboard() {
 
   const inProgressCount = tasks.filter((t) => !t.completed).length; // İşlemde olan görevler
   const completedCount = tasks.filter((t) => t.completed).length; // Çözülen görevler
+  // iptal edilen görevler eklenecek
+
+// ✅ Arama + Durum filtresi
+  const filteredTasks = tasks
+    .filter((task) =>
+      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (task.customer?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (task.department?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+    )
+    .filter((task) => {
+      if (statusFilter === "inProgress") return !task.completed;
+      if (statusFilter === "completed") return task.completed;
+      return true; // all
+    });
 
   if (status === "loading") {
     return (
@@ -66,21 +83,33 @@ export default function Dashboard() {
           <h2 className="font-bold text-black">Talep Durum</h2>
         </div>
         <div className="space-y-2">
-          {/* İşlemde */}
-          <div className="flex justify-between items-center border rounded px-3 py-2 bg-white">
+          {/* İşlemde buton */}
+          <button
+            onClick={() => setStatusFilter("inProgress")}
+            className={`flex justify-between items-center border rounded px-3 py-2 w-full ${
+              statusFilter === "inProgress" ? "bg-blue-100" : "bg-white"
+            }`}
+          >
             <span className="text-black">İşlemde</span>
             <span className="bg-blue-500 text-white px-2 py-1 rounded text-sm">
-              {inProgressCount} {/* Dinamik sayı */}
+              {inProgressCount}
             </span>
-          </div>
-          {/* Çözüldü */}
-          <div className="flex justify-between items-center border rounded px-3 py-2 bg-white">
+          </button>
+
+          {/* Çözüldü buton */}
+          <button
+            onClick={() => setStatusFilter("completed")}
+            className={`flex justify-between items-center border rounded px-3 py-2 w-full ${
+              statusFilter === "completed" ? "bg-green-100" : "bg-white"
+            }`}
+          >
             <span className="text-black">Çözüldü</span>
             <span className="bg-green-600 text-white px-2 py-1 rounded text-sm">
-              {completedCount} {/* Dinamik sayı */}
+              {completedCount}
             </span>
-          </div>
-          {/* İptal */}
+          </button>
+
+          {/* İptal (şimdilik işlevsiz, örnek) */}
           <div className="flex justify-between items-center border rounded px-3 py-2 bg-white">
             <span className="text-black">İptal</span>
             <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">
@@ -93,12 +122,18 @@ export default function Dashboard() {
       {/* Sağ taraf */}
       <section className="flex-1 bg-white p-4 rounded-lg shadow">
         {/* Arama */}
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-4 gap-2">
           <input
             type="text"
             placeholder="Ara"
             className="border rounded-lg px-3 py-2"
           />
+          <button
+            onClick={() => {}} // ✅ Şimdilik gerek yok çünkü filtre anlık çalışıyor
+            className="p-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white flex items-center justify-center"
+          >
+            <Search className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Tablo */}
@@ -118,10 +153,12 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {tasks.map((task) => (
-                <tr key={task.id} 
-                className="hover:bg-gray-50 cursor-pointer" 
-                onClick={() => (window.location.href = `/tasks/${task.id}`)}>
+              {filteredTasks.map((task) => (
+                <tr
+                  key={task.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => (window.location.href = `/tasks/${task.id}`)}
+                >
                   <td className="px-3 py-2 border">{task.id}</td>
                   <td className="px-3 py-2 border">{task.customer || "-"}</td>
                   <td className="px-3 py-2 border">—</td>
