@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { deleteTask } from "./actions";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download, File } from "lucide-react";
 
 type TaskPageProps = {
   params: Promise<{ id: string }>;
@@ -14,11 +14,32 @@ export default async function TaskDetailPage({ params }: TaskPageProps) {
 
   const task = await prisma.task.findUnique({
     where: { id: taskId },
+    include: {
+      files: true, // Dosyaları da getir
+    },
   });
 
   if (!task) return notFound();
 
-      return (
+  // Dosya boyutunu formatlayan yardımcı fonksiyon
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Dosya ikonunu belirleyen yardımcı fonksiyon
+  const getFileIcon = (fileType: string) => {
+    if (fileType.includes('image')) return '🖼️';
+    if (fileType.includes('pdf')) return '📄';
+    if (fileType.includes('word') || fileType.includes('document')) return '📝';
+    if (fileType.includes('zip') || fileType.includes('rar')) return '📦';
+    return '📎';
+  };
+
+  return (
     <main className="max-w-5xl mx-auto mt-10 bg-white rounded-lg shadow border border-gray-200 text-black">
       {/* Üst başlık bar - COMMITUP benzeri stil */}
       <div className="flex items-center justify-between bg-blue-800 text-white px-6 py-4 rounded-t-lg">
@@ -145,6 +166,38 @@ export default async function TaskDetailPage({ params }: TaskPageProps) {
                   )}
                 </td>
               </tr>
+              
+              {/* Ekli Dosyalar Bölümü */}
+              {task.files.length > 0 && (
+                <tr>
+                  <td className="font-semibold bg-gray-50 px-4 py-3 text-sm text-gray-600 border-r border-gray-200">Ekli Dosyalar</td>
+                  <td className="px-4 py-3 text-gray-800">
+                    <div className="space-y-2">
+                      {task.files.map((file) => (
+                        <div key={file.id} className="flex items-center justify-between p-3 bg-gray-50 rounded border">
+                          <div className="flex items-center gap-3">
+                            <File className="w-5 h-5 text-blue-600" />
+                            <div>
+                              <p className="font-medium text-sm">{file.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {formatFileSize(file.size)} • {file.type}
+                              </p>
+                            </div>
+                          </div>
+                          <a
+                            href={file.url}
+                            download={file.name}
+                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                            title="Dosyayı indir"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

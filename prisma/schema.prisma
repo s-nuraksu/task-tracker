@@ -62,6 +62,7 @@ model Task {
   customer    String?          
   userId      String
   user        User      @relation(fields: [userId], references: [id])
+  files       File[]
 }
 
 enum Priority {
@@ -69,4 +70,15 @@ enum Priority {
   medium
   high
   urgent
+}
+
+model File {
+  id        Int      @id @default(autoincrement())
+  name      String
+  url       String
+  size      Int
+  type      String
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
