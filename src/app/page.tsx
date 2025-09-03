@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 type Task = {
   id: number;
@@ -104,7 +104,7 @@ export default function Dashboard() {
             }`}
           >
             <span className="text-black">Çözüldü</span>
-            <span className="bg-green-600 text-white px-2 py-1 rounded text-sm">
+            <span className="bg-green-500 text-white px-2 py-1 rounded text-sm">
               {completedCount}
             </span>
           </button>
@@ -122,18 +122,39 @@ export default function Dashboard() {
       {/* Sağ taraf */}
       <section className="flex-1 bg-white p-4 rounded-lg shadow">
         {/* Arama */}
-        <div className="flex justify-end mb-4 gap-2">
-          <input
-            type="text"
-            placeholder="Ara"
-            className="border rounded-lg px-3 py-2"
-          />
-          <button
-            onClick={() => {}} // ✅ Şimdilik gerek yok çünkü filtre anlık çalışıyor
-            className="p-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white flex items-center justify-center"
-          >
-            <Search className="w-4 h-4" />
-          </button>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <button
+              className="p-2 border rounded-lg border-blue-700 text-blue-700 hover:bg-blue-100"
+              aria-label="Önceki"
+              onClick={() => {}}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              className="p-2 border rounded-lg border-blue-700 text-blue-700 hover:bg-blue-100"
+              aria-label="Sonraki"
+              onClick={() => {}}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Ara"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border rounded-lg px-3 py-2 w-64 border-gray-600 text-black"
+            />
+            <button
+              className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white flex items-center justify-center"
+              aria-label="Ara"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Tablo */}
@@ -149,7 +170,7 @@ export default function Dashboard() {
                 <th className="px-3 py-2 border">Talep Tarihi</th>
                 <th className="px-3 py-2 border">Atanan</th>
                 <th className="px-3 py-2 border">Öncelik</th>
-                <th className="px-3 py-2 border">Durum</th>
+                <th className="px-3 py-2 border">Talep Durumu</th>
               </tr>
             </thead>
             <tbody>
@@ -170,9 +191,13 @@ export default function Dashboard() {
                     {new Date(task.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-3 py-2 border">—</td>
-                  <td className="px-3 py-2 border">{task.priority}</td>
-                  <td className="px-3 py-2 border">
-                    {task.completed ? "Çözüldü" : "İşlemde"}
+                  <td className="px-3 py-2 border font-bold">{task.priority}</td>
+                  <td className="px-3 py-2 border font-semibold">
+                    {task.completed ? (
+                      <span className="text-green-500">Çözüldü</span>
+                    ) : (
+                      <span className="text-blue-500">İşlemde</span>
+                    )}
                   </td>
                 </tr>
               ))}
