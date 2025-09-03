@@ -4,33 +4,29 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 // 🔹 GET → Kullanıcının tüm görevlerini getir
+type SortKey = "createdAt" | "dueDate" | "priority";
+
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
-
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const isAdmin = session.user.role === "ADMIN";
+
   const { searchParams } = new URL(req.url);
-  const sort = searchParams.get("sort") || "createdAt"; // default createdAt
+  const sortParam = (searchParams.get("sort") as SortKey) || "createdAt";
 
-  // Kullanıcıyı bul
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
+  const orderBy =
+    sortParam === "priority"
+      ? { priority: "desc" as const }
+      : sortParam === "dueDate"
+      ? { dueDate: "asc" as const }
+      : { createdAt: "desc" as const };
 
-  // Kullanıcıya ait görevleri getir
   const tasks = await prisma.task.findMany({
-    where: { userId: user.id },
-    orderBy:
-      sort === "priority"
-        ? { priority: "desc" }
-        : sort === "dueDate"
-        ? { dueDate: "asc" }
-        : { createdAt: "desc" },
+    where: isAdmin ? {} : { userId: session.user.id },
+    orderBy,
   });
 
   return NextResponse.json(tasks);
