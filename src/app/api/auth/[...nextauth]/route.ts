@@ -1,35 +1,15 @@
-// app/api/auth/[...nextauth]/route.ts 
-import NextAuth, { NextAuthOptions } from "next-auth";
+// app/api/auth/[...nextauth]/route.ts
+import NextAuth, { type NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
-
-// Extend next-auth types
-import { Session, User } from "next-auth";
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      role: Role;
-    };
-  }
-  interface User {
-    role: Role;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    role: Role;
-  }
-}
+import type { Role } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+
+  session: { strategy: "jwt" },
+
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID!,
@@ -37,71 +17,47 @@ export const authOptions: NextAuthOptions = {
       httpOptions: { timeout: 10000 },
     }),
   ],
-  session: { strategy: "jwt" },
+
+  secret: process.env.NEXTAUTH_SECRET,
+
   callbacks: {
-    async jwt({ token, user, account, profile }) {
-      // Kullanıcı ilk giriş yaptığında
+    async jwt({ token, user }) {
+      // İlk girişte user gelir → token’a id ve role yaz
       if (user) {
-        token.role = user.role;
-        token.id = user.id;
+        token.sub = user.id as string;
+        // ts-expect-error prisma adapter user.role alanı
+        token.role = (user.role as Role) ?? "USER";
+        return token;
       }
-      // Mevcut token için role güncellemesi
-      else if (token.sub && !token.role) {
+
+      // Sonraki isteklerde role boşsa DB’den al
+      if (token.sub && !token.role) {
         const dbUser = await prisma.user.findUnique({
-          where: { id: token.sub },
-          select: { role: true }
+          where: { id: token.sub as string },
+          select: { role: true },
         });
-        token.role = dbUser?.role ?? Role.USER;
+        // ts-expect-error token genişletiyoruz
+        token.role = (dbUser?.role as Role) ?? "USER";
       }
+
       return token;
     },
+
     async session({ session, token }) {
       if (session.user && token.sub) {
-        session.user.id = token.sub;
-        session.user.role = token.role ?? Role.USER;
+        // ts-expect-error: custom fields
+        session.user.id = token.sub as string;
+        // @ts-expect-error: custom fields
+        session.user.role = (token.role as Role) ?? "USER";
       }
       return session;
     },
-    async signIn({ user, account, profile }) {
-  // Sadece GitHub provider'ı için
-  if (account?.provider === "github") {
-    try {
-      // ✅ Null check ve email validation
-      if (!user.email || !user.email.includes('@')) {
-        console.warn("Invalid or missing email from GitHub:", user.email);
-        return true; // Girişe izin ver, roller sonradan manuel ayarlanabilir
-      }
 
-      // ✅ Email'i lowercase yap ve trimle
-      const email = user.email.toLowerCase().trim();
-      
-      const existingUser = await prisma.user.findUnique({
-        where: { email },
-        select: { id: true, role: true }
-      });
-
-      // Yeni kullanıcıysa veya rolü yoksa default role ata
-      if (!existingUser) {
-        await prisma.user.update({
-          where: { email },
-          data: { role: Role.USER }
-        });
-      } else if (!existingUser.role) {
-        // Eski kullanıcıda rol yoksa ekle
-        await prisma.user.update({
-          where: { email },
-          data: { role: Role.USER }
-        });
-      }
-    } catch (error) {
-      console.error("SignIn callback error (non-blocking):", error);
-      // Hata olsa bile girişi engelleme
-    }
-  }
-  return true;
-}
+    async signIn() {
+      return true;
+    },
   },
-  pages: { signIn: "/auth/signin" },
+
 };
 
 const handler = NextAuth(authOptions);
