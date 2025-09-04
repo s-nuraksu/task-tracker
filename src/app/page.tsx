@@ -13,13 +13,16 @@ type Task = {
   completed: boolean;
   createdAt: string;
   department?: string;
+  user: {
+    name: string | null;
+  };
 };
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "inProgress" | "completed">("all"); // ✅ Durum filtresi
+  const [statusFilter, setStatusFilter] = useState<"all" | "inProgress" | "completed">("all");
 
   // Görevleri API’den çek
   async function fetchTasks() {
@@ -32,11 +35,11 @@ export default function Dashboard() {
     fetchTasks();
   }, [session]);
 
-  const inProgressCount = tasks.filter((t) => !t.completed).length; // İşlemde olan görevler
-  const completedCount = tasks.filter((t) => t.completed).length; // Çözülen görevler
+  const inProgressCount = tasks.filter((t) => !t.completed).length; 
+  const completedCount = tasks.filter((t) => t.completed).length; 
   // iptal edilen görevler eklenecek
 
-// ✅ Arama + Durum filtresi
+
   const filteredTasks = tasks
     .filter((task) =>
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,7 +49,7 @@ export default function Dashboard() {
     .filter((task) => {
       if (statusFilter === "inProgress") return !task.completed;
       if (statusFilter === "completed") return task.completed;
-      return true; // all
+      return true; 
     });
 
   if (status === "loading") {
@@ -78,7 +81,7 @@ export default function Dashboard() {
   return (
     <main className="flex gap-6 p-6">
       {/* Sol Panel */}
-      <aside className="w-1/4 bg-white p-4 rounded-lg shadow">
+      <aside className="w-[250px] h-[250px] shrink-0 bg-white p-4 rounded-lg shadow">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-black">Talep Durum</h2>
         </div>
@@ -182,7 +185,7 @@ export default function Dashboard() {
                 >
                   <td className="px-3 py-2 border">{task.id}</td>
                   <td className="px-3 py-2 border">{task.customer || "-"}</td>
-                  <td className="px-3 py-2 border">—</td>
+                  <td className="px-3 py-2 border">{task.user?.name || "-"}</td>
                   <td className="px-3 py-2 border">{task.department || "-"}</td>
                   <td className="px-3 py-2 border truncate max-w-[200px]">
                     {task.title}

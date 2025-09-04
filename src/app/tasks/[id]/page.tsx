@@ -15,7 +15,7 @@ export default async function TaskDetailPage({ params }: TaskPageProps) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: {
-      files: true, // Dosyaları da getir
+      files: true, 
     },
   });
 
@@ -41,7 +41,6 @@ export default async function TaskDetailPage({ params }: TaskPageProps) {
 
   return (
     <main className="max-w-5xl mx-auto mt-10 bg-white rounded-lg shadow border border-gray-200 text-black">
-      {/* Üst başlık bar - COMMITUP benzeri stil */}
       <div className="flex items-center justify-between bg-blue-800 text-white px-6 py-4 rounded-t-lg">
         <div className="flex items-center gap-2">
           <Link href="/" className="hover:text-gray-300 flex items-center">

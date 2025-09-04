@@ -26,7 +26,6 @@ export default function NewTaskPage() {
     formData.append("customer", customer);
     formData.append("priority", priority);
     
-    // Dosyaları forma ekle
     files.forEach((file) => {
       formData.append("files", file);
     });

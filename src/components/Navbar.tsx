@@ -12,7 +12,7 @@ export default function Navbar() {
   const userName = session?.user?.name || "Kullanıcı";
 
   return (
-    <nav className="w-full min-w-[1024px] bg-blue-900 text-white px-6 py-3 flex items-center justify-between shadow-md relative">
+    <nav className="w-full bg-blue-900 text-white px-6 py-3 flex items-center justify-between shadow-md relative">
       <div className="flex items-center gap-8">
         <Link href="/" className="text-xl font-bold tracking-wide">COMMITUP</Link>
         <div className="flex gap-6 text-sm font-medium ">
@@ -22,8 +22,9 @@ export default function Navbar() {
           {isAdmin && <Link href="/admin" className="hover:underline">Admin</Link>}
         </div>
       </div>
+      
       <div className="flex items-center gap-4">
-        <Link href="/tasks/new" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow">Talep Ekle</Link>
+        <Link href="/tasks/new" className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg shadow">Talep Ekle</Link>
         <button className="p-2 rounded-full hover:bg-blue-800"><Sun className="w-5 h-5" /></button>
         <div className="relative">
           <button className="p-2 rounded-full hover:bg-blue-800" onClick={() => setMenuOpen(!menuOpen)}>

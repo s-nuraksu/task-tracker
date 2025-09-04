@@ -12,7 +12,6 @@ export const config = {
   },
 };
 
-// 🔹 GET → Kullanıcının tüm görevlerini getir
 type SortKey = "createdAt" | "dueDate" | "priority";
 
 export async function GET(req: Request) {
@@ -37,14 +36,18 @@ export async function GET(req: Request) {
     where: isAdmin ? {} : { userId: session.user.id },
     orderBy,
     include: {
-      files: true, // Dosyaları da içerecek şekilde güncelle
+      files: true, 
+      user: { 
+        select: {
+          name: true
+        }
+      }
     },
   });
 
   return NextResponse.json(tasks);
 }
 
-// 🔹 POST → Yeni görev oluştur
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
@@ -52,10 +55,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // FormData olarak verileri al
   const formData = await req.formData();
   
-  // Form alanlarını al
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const dueDate = formData.get("dueDate") as string;
@@ -68,7 +69,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
 
-  // Kullanıcıyı bul
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
   });
@@ -77,7 +77,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Görev oluştur
   const task = await prisma.task.create({
     data: {
       title,
@@ -90,25 +89,21 @@ export async function POST(req: Request) {
     },
   });
 
-  // Dosyaları işle
   if (files && files.length > 0 && files[0].size > 0) {
     try {
       const uploadDir = join(process.cwd(), 'public', 'uploads');
       
-      // Upload dizinini oluştur (yoksa)
       try {
         await mkdir(uploadDir, { recursive: true });
       } catch (error) {
         console.error('Upload dizini oluşturulamadı:', error);
       }
-      
-      // Her dosya için işlem yap
+
       for (const file of files) {
         const buffer = Buffer.from(await file.arrayBuffer());
         const uniqueName = `${uuidv4()}-${file.name}`;
         const filePath = join(uploadDir, uniqueName);
         
-        // Dosyayı diske yaz
         await writeFile(filePath, buffer);
         
         // Veritabanına dosya kaydı ekle
@@ -130,7 +125,6 @@ export async function POST(req: Request) {
   return NextResponse.json(task);
 }
 
-// 🔹 PUT → Görev güncelle
 export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
 
@@ -178,7 +172,6 @@ export async function PUT(req: Request) {
   return NextResponse.json(updatedTask);
 }
 
-// 🔹 DELETE → Görev sil
 export async function DELETE(req: Request) {
   const session = await getServerSession(authOptions);
 
@@ -205,14 +198,12 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Önce dosyaları sil (varsa)
   if (task.files.length > 0) {
     await prisma.file.deleteMany({
       where: { taskId: id }
     });
   }
 
-  // Görevi sil
   await prisma.task.delete({
     where: { id },
   });
