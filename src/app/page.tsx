@@ -6,16 +6,16 @@ import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 type Task = {
   id: number;
-  customer?: string;
   title: string;
-  description?: string;
+  customer?: string;
+  department?: string;
   priority: string;
   completed: boolean;
   createdAt: string;
-  department?: string;
-  user: {
-    name: string | null;
-  };
+  createdById: string;
+  claimedById: string | null;
+  createdBy?: { name: string | null } | null;
+  claimedBy?: { name: string | null } | null;
 };
 
 export default function Dashboard() {
@@ -24,7 +24,6 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "inProgress" | "completed">("all");
 
-  // Görevleri API’den çek
   async function fetchTasks() {
     if (!session) return;
     const res = await fetch("/api/tasks");
@@ -185,7 +184,7 @@ export default function Dashboard() {
                 >
                   <td className="px-3 py-2 border">{task.id}</td>
                   <td className="px-3 py-2 border">{task.customer || "-"}</td>
-                  <td className="px-3 py-2 border">{task.user?.name || "-"}</td>
+                  <td className="px-3 py-2 border">{task.createdBy?.name || "-"}</td>
                   <td className="px-3 py-2 border">{task.department || "-"}</td>
                   <td className="px-3 py-2 border truncate max-w-[200px]">
                     {task.title}
@@ -193,7 +192,7 @@ export default function Dashboard() {
                   <td className="px-3 py-2 border">
                     {new Date(task.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-3 py-2 border">—</td>
+                  <td className="px-3 py-2 border">{task.claimedBy ? (task.claimedBy.name || "—") : "Boşta"}</td>
                   <td className="px-3 py-2 border font-bold">{task.priority}</td>
                   <td className="px-3 py-2 border font-semibold">
                     {task.completed ? (

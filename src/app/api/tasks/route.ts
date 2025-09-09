@@ -32,16 +32,27 @@ export async function GET(req: Request) {
       ? { dueDate: "asc" as const }
       : { createdAt: "desc" as const };
 
+  const where = isAdmin
+    ? {}
+    : {
+        OR: [
+          { createdById: session.user.id },
+          { claimedById: null },
+          { claimedById: session.user.id },
+        ],
+      };
+
   const tasks = await prisma.task.findMany({
-    where: isAdmin ? {} : { userId: session.user.id },
+    where,
     orderBy,
     include: {
-      files: true, 
-      user: { 
-        select: {
-          name: true
-        }
-      }
+      files: true,
+      createdBy: {
+        select: { name: true },
+      },
+      claimedBy: {
+        select: { name: true },
+},
     },
   });
 
@@ -56,7 +67,7 @@ export async function POST(req: Request) {
   }
 
   const formData = await req.formData();
-  
+
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const dueDate = formData.get("dueDate") as string;
@@ -85,28 +96,28 @@ export async function POST(req: Request) {
       priority: (priority as any) || "medium",
       department: department || null,
       customer: customer || null,
-      userId: user.id,
+      createdById: user.id,
+      claimedById: null,
     },
   });
 
   if (files && files.length > 0 && files[0].size > 0) {
     try {
-      const uploadDir = join(process.cwd(), 'public', 'uploads');
-      
+      const uploadDir = join(process.cwd(), "public", "uploads");
+
       try {
         await mkdir(uploadDir, { recursive: true });
       } catch (error) {
-        console.error('Upload dizini oluşturulamadı:', error);
+        console.error("Upload dizini oluşturulamadı:", error);
       }
 
       for (const file of files) {
         const buffer = Buffer.from(await file.arrayBuffer());
         const uniqueName = `${uuidv4()}-${file.name}`;
         const filePath = join(uploadDir, uniqueName);
-        
+
         await writeFile(filePath, buffer);
-        
-        // Veritabanına dosya kaydı ekle
+
         await prisma.file.create({
           data: {
             name: file.name,
@@ -118,7 +129,7 @@ export async function POST(req: Request) {
         });
       }
     } catch (error) {
-      console.error('Dosya yükleme hatası:', error);
+      console.error("Dosya yükleme hatası:", error);
     }
   }
 
@@ -151,8 +162,17 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const task = await prisma.task.findUnique({ where: { id } });
-  if (!task || task.userId !== user.id) {
+  // 🛡️ Düzenleme yetkisi: sadece claimer
+  const task = await prisma.task.findUnique({
+    where: { id },
+    select: { claimedById: true, title: true, description: true, dueDate: true, priority: true, department: true, customer: true, completed: true },
+  });
+
+  if (!task) {
+    return NextResponse.json({ error: "Task not found" }, { status: 404 });
+  }
+
+  if (task.claimedById !== user.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -189,18 +209,22 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const task = await prisma.task.findUnique({ 
+  const task = await prisma.task.findUnique({
     where: { id },
-    include: { files: true }
+    include: { files: true },
   });
 
-  if (!task || task.userId !== user.id) {
+  if (!task) {
+    return NextResponse.json({ error: "Task not found" }, { status: 404 });
+  }
+
+  if (task.claimedById !== user.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if (task.files.length > 0) {
     await prisma.file.deleteMany({
-      where: { taskId: id }
+      where: { taskId: id },
     });
   }
 

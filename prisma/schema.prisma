@@ -13,31 +13,33 @@ enum Role {
 }
 
 model User {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String?  @unique
+  email         String?   @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
-  tasks         Task[]   
-  role          Role     @default(USER)
+  role          Role      @default(USER)
+
+  tasksCreated Task[] @relation("TasksCreated")
+  tasksClaimed Task[] @relation("TasksClaimed")
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -53,16 +55,27 @@ model Session {
 model Task {
   id          Int       @id @default(autoincrement())
   title       String
-  description String?         
+  description String?
   completed   Boolean   @default(false)
   createdAt   DateTime  @default(now())
-  dueDate     DateTime?        
-  priority    Priority  @default(medium) 
-  department  String?          
-  customer    String?          
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  files       File[]
+  dueDate     DateTime?
+  priority    Priority  @default(medium)
+  department  String?
+  customer    String?
+
+  createdById String
+  createdBy   User   @relation("TasksCreated", fields: [createdById], references: [id], onDelete: Cascade)
+
+  claimedById String?
+  claimedBy   User?   @relation("TasksClaimed", fields: [claimedById], references: [id])
+
+  files File[]
+
+  @@index([createdById])
+  @@index([claimedById])
+  @@index([completed])
+  @@index([priority])
+  @@index([createdAt])
 }
 
 enum Priority {
