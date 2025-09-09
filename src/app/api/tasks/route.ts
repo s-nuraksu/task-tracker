@@ -21,9 +21,9 @@ export async function GET(req: Request) {
   }
 
   const isAdmin = session.user.role === "ADMIN";
-
   const { searchParams } = new URL(req.url);
-  const sortParam = (searchParams.get("sort") as SortKey) || "createdAt";
+  const sortParam = (searchParams.get("sort") as "createdAt" | "dueDate" | "priority") || "createdAt";
+  const show = searchParams.get("show"); // "canceled" ise iptalleri getir
 
   const orderBy =
     sortParam === "priority"
@@ -32,31 +32,51 @@ export async function GET(req: Request) {
       ? { dueDate: "asc" as const }
       : { createdAt: "desc" as const };
 
+  const baseWhere =
+    show === "canceled"
+      ? { isCanceled: true }
+      : { isCanceled: false };
+
   const where = isAdmin
-    ? {}
+    ? baseWhere
     : {
-        OR: [
-          { createdById: session.user.id },
-          { claimedById: null },
-          { claimedById: session.user.id },
+        AND: [
+          baseWhere,
+          {
+            OR:
+              show === "canceled"
+                ? [
+                    { createdById: session.user.id },
+                    { claimedById: session.user.id },
+                  ]
+                : [
+                    { createdById: session.user.id },
+                    { claimedById: null },
+                    { claimedById: session.user.id },
+                  ],
+          },
         ],
       };
 
-  const tasks = await prisma.task.findMany({
-    where,
-    orderBy,
-    include: {
-      files: true,
-      createdBy: {
-        select: { name: true },
+  try {
+    const tasks = await prisma.task.findMany({
+      where,
+      orderBy,
+      include: {
+        files: true,
+        createdBy: { select: { name: true } },
+        claimedBy: { select: { name: true } },
       },
-      claimedBy: {
-        select: { name: true },
-},
-    },
-  });
+    });
 
-  return NextResponse.json(tasks);
+    return NextResponse.json(tasks);
+  } catch (err: any) {
+    console.error("GET /api/tasks error:", err);
+    return NextResponse.json(
+      { error: "Database error", detail: err?.message },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: Request) {

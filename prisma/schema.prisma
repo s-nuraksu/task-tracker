@@ -69,6 +69,8 @@ model Task {
   claimedById String?
   claimedBy   User?   @relation("TasksClaimed", fields: [claimedById], references: [id])
 
+  isCanceled Boolean @default(false)
+
   files File[]
 
   @@index([createdById])

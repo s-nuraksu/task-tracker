@@ -2,20 +2,64 @@
 
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export async function deleteTask(formData: FormData) {
+export async function cancelTask(formData: FormData) {
   const id = Number(formData.get("id"));
-  await prisma.task.delete({ where: { id } });
-  redirect("/");
+  if (!id || Number.isNaN(id)) throw new Error("Geçersiz görev id");
+
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) throw new Error("Unauthorized");
+
+  const task = await prisma.task.findUnique({
+    where: { id },
+    select: { claimedById: true, isCanceled: true },
+  });
+  if (!task) throw new Error("Task not found");
+
+  if (task.isCanceled) {
+    redirect(`/tasks/${id}`); 
+  }
+
+  if (task.claimedById !== userId) {
+    throw new Error("Bu görevi iptal etme yetkin yok");
+  }
+
+  await prisma.task.update({
+    where: { id },
+    data: { isCanceled: true },
+  });
+
+  redirect("/"); 
 }
 
 export async function toggleComplete(formData: FormData) {
   const id = Number(formData.get("id"));
-  const completed = formData.get("completed") === "true";
+  if (!id || Number.isNaN(id)) throw new Error("Geçersiz görev id");
+
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) throw new Error("Unauthorized");
+
+  const task = await prisma.task.findUnique({
+    where: { id },
+    select: { claimedById: true, isCanceled: true, completed: true },
+  });
+  if (!task) throw new Error("Task not found");
+
+  if (task.isCanceled) {
+    throw new Error("İptal edilmiş görev güncellenemez");
+  }
+
+  if (task.claimedById !== userId) {
+    throw new Error("Bu görevi güncelleme yetkin yok");
+  }
 
   await prisma.task.update({
     where: { id },
-    data: { completed: !completed },
+    data: { completed: !task.completed }, 
   });
 
   redirect(`/tasks/${id}`);

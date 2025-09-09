@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { deleteTask } from "./actions";
+import { cancelTask } from "./actions";
 import Link from "next/link";
 import { ArrowLeft, Download, File } from "lucide-react";
 import { getServerSession } from "next-auth";
@@ -106,13 +106,13 @@ export default async function TaskDetailPage({ params }: TaskPageProps) {
               >
                 Düzenle
               </Link>
-              <form action={deleteTask}>
+              <form action={cancelTask}>
                 <input type="hidden" name="id" value={task.id} />
                 <button
                   type="submit"
                   className="px-4 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white font-medium text-sm"
                 >
-                  Sil
+                  İptal Et
                 </button>
               </form>
             </>
