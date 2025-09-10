@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   const isAdmin = session.user.role === "ADMIN";
   const { searchParams } = new URL(req.url);
   const sortParam = (searchParams.get("sort") as "createdAt" | "dueDate" | "priority") || "createdAt";
-  const show = searchParams.get("show"); // "canceled" ise iptalleri getir
+  const show = searchParams.get("show"); 
 
   const orderBy =
     sortParam === "priority"
@@ -182,7 +182,6 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // 🛡️ Düzenleme yetkisi: sadece claimer
   const task = await prisma.task.findUnique({
     where: { id },
     select: { claimedById: true, title: true, description: true, dueDate: true, priority: true, department: true, customer: true, completed: true },

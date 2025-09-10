@@ -22,7 +22,6 @@ type Task = {
 export default function Dashboard() {
   const { data: session, status } = useSession();
 
-  // iki ayrı kaynak: aktif ve iptal görevleri
   const [activeTasks, setActiveTasks] = useState<Task[]>([]);
   const [canceledTasks, setCanceledTasks] = useState<Task[]>([]);
 
@@ -31,13 +30,12 @@ export default function Dashboard() {
     useState<"all" | "waiting" | "inProgress" | "completed">("all");
   const [showCanceled, setShowCanceled] = useState(false);
 
-  // her zaman iki listeyi de çek
   async function fetchAllTasks() {
     if (!session) return;
 
     const [activeRes, canceledRes] = await Promise.all([
-      fetch("/api/tasks"),               // aktifler (isCanceled=false)
-      fetch("/api/tasks?show=canceled"), // iptaller (isCanceled=true)
+      fetch("/api/tasks"),              
+      fetch("/api/tasks?show=canceled"), 
     ]);
 
     if (activeRes.ok) setActiveTasks(await activeRes.json());
@@ -46,19 +44,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchAllTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  // sayaçlar (liste görünümünden bağımsız)
-  const waitingCount    = activeTasks.filter(t => !t.completed && t.claimedById === null).length; // beklemede
-  const inProgressCount = activeTasks.filter(t => !t.completed && t.claimedById !== null).length; // işlemde
-  const completedCount  = activeTasks.filter(t =>  t.completed).length;                            // çözüldü
-  const canceledCount   = canceledTasks.length;                                                    // iptal
+  const waitingCount    = activeTasks.filter(t => !t.completed && t.claimedById === null).length; 
+  const inProgressCount = activeTasks.filter(t => !t.completed && t.claimedById !== null).length; 
+  const completedCount  = activeTasks.filter(t =>  t.completed).length;
+  const canceledCount   = canceledTasks.length;
 
-  // Gösterilecek listeyi seç
   const displayTasks = showCanceled ? canceledTasks : activeTasks;
 
-  // Arama + durum filtreleri
   const filteredTasks = displayTasks
     .filter((task) =>
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,14 +61,12 @@ export default function Dashboard() {
     )
     .filter((task) => {
       if (showCanceled) {
-        // iptal görünümünde durum filtresi uygulanmaz
         return task.isCanceled;
       } else {
-        // aktif görünüm
         if (statusFilter === "waiting")    return !task.completed && task.claimedById === null;
         if (statusFilter === "inProgress") return !task.completed && task.claimedById !== null;
         if (statusFilter === "completed")  return  task.completed;
-        return true; // all
+        return true; 
       }
     });
 
@@ -104,12 +96,10 @@ export default function Dashboard() {
 
   return (
     <main className="flex gap-6 p-6">
-      {/* Sol Panel */}
       <aside className="w-[250px] shrink-0 bg-white p-4 rounded-lg shadow">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-black">Talep Durum</h2>
 
-          {/* ✅ Tümü butonu */}
           <button
             onClick={() => { setShowCanceled(false); setStatusFilter("all"); }}
             className={`px-2 py-1 text-xs rounded border transition
@@ -125,7 +115,7 @@ export default function Dashboard() {
         </div>
 
         <div className="space-y-2">
-          {/* Beklemede */}
+
           <button
             onClick={() => { setShowCanceled(false); setStatusFilter("waiting"); }}
             className={`flex justify-between items-center border rounded px-3 py-2 w-full ${
@@ -136,7 +126,6 @@ export default function Dashboard() {
             <span className="bg-amber-500 text-white px-2 py-1 rounded text-sm">{waitingCount}</span>
           </button>
 
-          {/* İşlemde */}
           <button
             onClick={() => { setShowCanceled(false); setStatusFilter("inProgress"); }}
             className={`flex justify-between items-center border rounded px-3 py-2 w-full ${
@@ -147,7 +136,6 @@ export default function Dashboard() {
             <span className="bg-blue-500 text-white px-2 py-1 rounded text-sm">{inProgressCount}</span>
           </button>
 
-          {/* Çözüldü */}
           <button
             onClick={() => { setShowCanceled(false); setStatusFilter("completed"); }}
             className={`flex justify-between items-center border rounded px-3 py-2 w-full ${
@@ -158,7 +146,6 @@ export default function Dashboard() {
             <span className="bg-green-500 text-white px-2 py-1 rounded text-sm">{completedCount}</span>
           </button>
 
-          {/* İptal */}
           <button
             onClick={() => { setShowCanceled(true); setStatusFilter("all"); }}
             className={`flex justify-between items-center border rounded px-3 py-2 w-full ${
@@ -171,9 +158,8 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* Sağ taraf */}
       <section className="flex-1 bg-white p-4 rounded-lg shadow">
-        {/* Arama */}
+
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <button
@@ -207,7 +193,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Tablo */}
         <div className="overflow-x-auto">
           <table className="min-w-full border text-sm text-black">
             <thead className="bg-gray-100">
@@ -248,7 +233,7 @@ export default function Dashboard() {
                     ) : task.completed ? (
                       <span className="text-green-500">Çözüldü</span>
                     ) : task.claimedById === null ? (
-                      <span className="text-amber-600">Beklemede</span>
+                      <span className="text-yellow-600">Beklemede</span>
                     ) : (
                       <span className="text-blue-500">İşlemde</span>
                     )}

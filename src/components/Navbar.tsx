@@ -1,4 +1,3 @@
-// components/Navbar.tsx
 "use client";
 import Link from "next/link";
 import { Sun, User } from "lucide-react";
@@ -24,7 +23,7 @@ export default function Navbar() {
       </div>
       
       <div className="flex items-center gap-4">
-        <Link href="/tasks/new" className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg shadow">Talep Ekle</Link>
+        <Link href="/tasks/new" className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md shadow">Talep Ekle</Link>
         <button className="p-2 rounded-full hover:bg-blue-800"><Sun className="w-5 h-5" /></button>
         <div className="relative">
           <button className="p-2 rounded-full hover:bg-blue-800" onClick={() => setMenuOpen(!menuOpen)}>

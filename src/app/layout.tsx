@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="tr">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-100`}>
         <Providers>
-          <Navbar />   {/* 👈 Navbar buraya eklendi */}
+          <Navbar />  
           <main className="p-6">{children}</main>
         </Providers>
       </body>

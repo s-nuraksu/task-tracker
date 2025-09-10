@@ -21,7 +21,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Task not found" }, { status: 404 });
   }
 
-  if (task.userId !== session.user.id) {
+  if (task.createdById !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

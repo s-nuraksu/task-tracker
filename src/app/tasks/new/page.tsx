@@ -75,7 +75,7 @@ export default function NewTaskPage() {
             className="p-4 space-y-4"
             encType="multipart/form-data"
           >
-            {/* Departman */}
+          
             <div>
               <label className="block mb-1 text-sm text-slate-500">Departman</label>
               <select
@@ -90,41 +90,35 @@ export default function NewTaskPage() {
               </select>
             </div>
 
-            {/* Talep Konusu */}
+          
             <div>
               <label className="block mb-1 text-sm text-slate-500">Talep Konusu</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full rounded-md border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 px-3 py-2 text-black"
-                placeholder="Staj İçin Bir Örnek Bildirim"
                 required
               />
             </div>
 
-            {/* Talep Açıklama */}
             <div>
               <label className="block mb-1 text-sm text-slate-500">Talep Açıklama</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full rounded-md border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 px-3 py-2 h-36 text-black"
-                placeholder="xyz sisteminde destek istiyoruz."
               />
             </div>
 
-            {/* Müşteri */}
             <div>
               <label className="block mb-1 text-sm text-slate-500">Müşteri</label>
               <input
                 value={customer}
                 onChange={(e) => setCustomer(e.target.value)}
                 className="w-full rounded-md border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 px-3 py-2 text-black"
-                placeholder="CommitUp"
               />
             </div>
 
-            {/* Dosya Yükleme Bölümü */}
             <div>
               <label className="block mb-1 text-sm text-slate-500">Dosya Ekle</label>
               <div className="flex items-center justify-center w-full">
@@ -132,7 +126,7 @@ export default function NewTaskPage() {
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <Upload className="w-8 h-8 mb-3 text-blue-500" />
                     <p className="mb-2 text-sm text-blue-500">
-                      <span className="font-semibold">Dosyaları tıklayarak seçin</span> veya sürükleyip bırakın
+                      <span className="font-semibold">Dosyaları tıklayarak seçin veya sürükleyip bırakın</span>
                     </p>
                     <p className="text-xs text-gray-500">
                       PDF, DOC, DOCX, JPG, PNG (Max. 10MB)
@@ -146,8 +140,7 @@ export default function NewTaskPage() {
                   />
                 </label>
               </div>
-              
-              {/* Seçilen dosyaların listesi */}
+
               {files.length > 0 && (
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-slate-500 mb-2">Seçilen Dosyalar:</h3>
@@ -172,7 +165,6 @@ export default function NewTaskPage() {
               )}
             </div>
 
-            {/* Talep Öncelik */}
             <div>
               <label className="block mb-2 text-sm text-slate-500">Talep Öncelik</label>
               <div className="flex gap-2">
@@ -202,7 +194,6 @@ export default function NewTaskPage() {
               </div>
             </div>
 
-            {/* Kaydet Butonu */}
             <div className="pt-2">
               <button
                 type="submit"
